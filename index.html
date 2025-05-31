@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload Justificatifs</title>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@uploadcare/file-uploader@v1/web/file-uploader.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@uploadcare/file-uploader@v1/web/uc-file-uploader-regular.min.css">
     <style>
         body { 
@@ -61,6 +60,13 @@
             color: #721c24; padding: 20px; border-radius: 8px;
             margin: 20px; text-align: center;
         }
+        .upload-zone {
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            padding: 40px;
+            background: #f8f9ff;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
@@ -105,18 +111,19 @@
                 <h2 class="upload-title">📎 Ajoutez vos justificatifs</h2>
                 <p class="upload-subtitle">Glissez-déposez vos fichiers ou cliquez pour les sélectionner</p>
                 
-                <uc-config
-                    ctx-name="ndf-uploader"
-                    pubkey="67847ccf6037de20b796"
-                    multiple="true"
-                    store="auto"
-                    group-output="true"
-                    confirm-upload="true"
-                    max-local-file-size-bytes="10485760"
-                    accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx">
-                </uc-config>
+                <div class="upload-zone">
+                    <uc-config
+                        ctx-name="my-uploader"
+                        pubkey="67847ccf6037de20b796"
+                        multiple="true"
+                        store="auto"
+                        group-output="true"
+                        max-local-file-size-bytes="10485760"
+                        accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx">
+                    </uc-config>
 
-                <uc-file-uploader-regular ctx-name="ndf-uploader"></uc-file-uploader-regular>
+                    <uc-file-uploader-regular ctx-name="my-uploader"></uc-file-uploader-regular>
+                </div>
                 
                 <div id="success-message" class="success-message">
                     <h3 style="margin-top: 0;">✅ Upload réussi !</h3>
@@ -137,7 +144,10 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import * as UC from "https://cdn.jsdelivr.net/npm/@uploadcare/file-uploader@v1/web/file-uploader.min.js";
+        UC.defineComponents(UC);
+
         // Récupérer les paramètres de l'URL
         const urlParams = new URLSearchParams(window.location.search);
         
@@ -164,9 +174,9 @@
             document.getElementById('description').textContent = ndfData.description;
             document.getElementById('success-ndf-id').textContent = ndfData.ndf_id;
 
-            // Configurer les metadata Uploadcare APRÈS que la page soit chargée
+            // Configurer les metadata Uploadcare via JavaScript
             setTimeout(() => {
-                const uploaderConfig = document.querySelector('uc-config[ctx-name="ndf-uploader"]');
+                const uploaderConfig = document.querySelector('uc-config[ctx-name="my-uploader"]');
                 if (uploaderConfig) {
                     const metadata = {
                         ndf_id: ndfData.ndf_id,
@@ -177,28 +187,19 @@
                         timestamp: ndfData.timestamp
                     };
                     uploaderConfig.setAttribute('metadata', JSON.stringify(metadata));
-                    
-                    // Forcer le rechargement du widget
-                    const uploaderElement = document.querySelector('uc-file-uploader-regular[ctx-name="ndf-uploader"]');
-                    if (uploaderElement) {
-                        uploaderElement.style.display = 'none';
-                        setTimeout(() => {
-                            uploaderElement.style.display = 'block';
-                        }, 100);
-                    }
                 }
             }, 1000);
         }
 
-        // Gestion des événements Uploadcare
-        document.addEventListener('DOMContentLoaded', function() {
-            const uploaderElement = document.querySelector('uc-file-uploader-regular[ctx-name="ndf-uploader"]');
+        // Attendre que les composants soient définis
+        setTimeout(() => {
+            const uploaderElement = document.querySelector('uc-file-uploader-regular[ctx-name="my-uploader"]');
             
             if (uploaderElement) {
                 uploaderElement.addEventListener('file-upload-success', (e) => {
                     console.log('Upload réussi:', e.detail);
                     document.getElementById('success-message').style.display = 'block';
-                    uploaderElement.style.display = 'none';
+                    document.querySelector('.upload-zone').style.display = 'none';
                     
                     // Scroll vers le message de succès
                     document.getElementById('success-message').scrollIntoView({ 
@@ -211,8 +212,16 @@
                     console.error('Échec upload:', e.detail);
                     alert('❌ Erreur lors de l\'upload. Veuillez réessayer.');
                 });
+
+                uploaderElement.addEventListener('file-added', (e) => {
+                    console.log('Fichier ajouté:', e.detail);
+                });
+
+                uploaderElement.addEventListener('file-removed', (e) => {
+                    console.log('Fichier supprimé:', e.detail);
+                });
             }
-        });
+        }, 2000);
     </script>
 </body>
 </html>
