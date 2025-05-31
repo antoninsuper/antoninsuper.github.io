@@ -210,8 +210,21 @@
             const uploaderElement = document.querySelector('uc-file-uploader-regular[ctx-name="my-uploader"]');
             
             if (uploaderElement) {
+                // Quand des fichiers sont ajoutés
+                uploaderElement.addEventListener('file-added', (e) => {
+                    console.log('Fichier ajouté:', e.detail);
+                });
+
+                // Quand un fichier est supprimé
+                uploaderElement.addEventListener('file-removed', (e) => {
+                    console.log('Fichier supprimé:', e.detail);
+                });
+
+                // 🎯 IMPORTANT: Quand l'upload est terminé avec succès
                 uploaderElement.addEventListener('file-upload-success', (e) => {
                     console.log('Upload réussi:', e.detail);
+                    
+                    // Afficher le message de succès
                     document.getElementById('success-message').style.display = 'block';
                     document.querySelector('.upload-zone').style.display = 'none';
                     
@@ -220,19 +233,40 @@
                         behavior: 'smooth', 
                         block: 'center' 
                     });
+
+                    // 📧 Optionnel: Envoyer notification à n8n
+                    fetch('https://primary-production-6c02.up.railway.app/webhook/upload-notification', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            ndf_id: ndfData.ndf_id,
+                            employee: ndfData.employee_name,
+                            files_uploaded: e.detail.allEntries ? e.detail.allEntries.length : 1,
+                            group_id: e.detail.groupInfo ? e.detail.groupInfo.uuid : null,
+                            file_id: e.detail.fileInfo ? e.detail.fileInfo.uuid : null,
+                            status: 'files_received'
+                        })
+                    }).catch(err => console.log('Notification envoyée'));
                 });
 
+                // En cas d'erreur d'upload
                 uploaderElement.addEventListener('file-upload-failed', (e) => {
                     console.error('Échec upload:', e.detail);
                     alert('❌ Erreur lors de l\'upload. Veuillez réessayer.');
                 });
 
-                uploaderElement.addEventListener('file-added', (e) => {
-                    console.log('Fichier ajouté:', e.detail);
+                // 📊 Progression de l'upload
+                uploaderElement.addEventListener('file-upload-progress', (e) => {
+                    console.log('Progression:', e.detail);
+                    // Vous pouvez ajouter une barre de progression ici
                 });
 
-                uploaderElement.addEventListener('file-removed', (e) => {
-                    console.log('Fichier supprimé:', e.detail);
+                // 🔄 Quand l'upload commence
+                uploaderElement.addEventListener('file-upload-start', (e) => {
+                    console.log('Upload démarré:', e.detail);
+                    // Désactiver le bouton ou afficher un loader
                 });
             }
         }, 2000);
