@@ -205,71 +205,61 @@
             }, 1000);
         }
 
-        // Attendre que les composants soient définis
+        // Attendre que les composants soient définis et debug complet
         setTimeout(() => {
+            console.log('🔍 Début du debug...');
+            
             const uploaderElement = document.querySelector('uc-file-uploader-regular[ctx-name="my-uploader"]');
+            console.log('🎯 Uploader trouvé:', uploaderElement);
             
             if (uploaderElement) {
-                // Quand des fichiers sont ajoutés
-                uploaderElement.addEventListener('file-added', (e) => {
-                    console.log('Fichier ajouté:', e.detail);
-                });
+                // Lister tous les événements possibles
+                const events = [
+                    'file-added',
+                    'file-removed', 
+                    'file-upload-start',
+                    'file-upload-progress',
+                    'file-upload-success',
+                    'file-upload-failed',
+                    'upload-start',
+                    'upload-progress', 
+                    'upload-success',
+                    'upload-failed',
+                    'done',
+                    'change',
+                    'modal-open',
+                    'modal-close'
+                ];
 
-                // Quand un fichier est supprimé
-                uploaderElement.addEventListener('file-removed', (e) => {
-                    console.log('Fichier supprimé:', e.detail);
-                });
-
-                // 🎯 IMPORTANT: Quand l'upload est terminé avec succès
-                uploaderElement.addEventListener('file-upload-success', (e) => {
-                    console.log('Upload réussi:', e.detail);
-                    
-                    // Afficher le message de succès
-                    document.getElementById('success-message').style.display = 'block';
-                    document.querySelector('.upload-zone').style.display = 'none';
-                    
-                    // Scroll vers le message de succès
-                    document.getElementById('success-message').scrollIntoView({ 
-                        behavior: 'smooth', 
-                        block: 'center' 
+                // Écouter TOUS les événements pour voir lesquels se déclenchent
+                events.forEach(eventName => {
+                    uploaderElement.addEventListener(eventName, (e) => {
+                        console.log(`🎉 Événement détecté: ${eventName}`, e.detail);
+                        
+                        // Si c'est un événement de succès, afficher le message
+                        if (eventName.includes('success') || eventName === 'done') {
+                            console.log('✅ Déclenchement du message de succès');
+                            document.getElementById('success-message').style.display = 'block';
+                            document.querySelector('.upload-zone').style.display = 'none';
+                            document.getElementById('success-message').scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'center' 
+                            });
+                        }
                     });
-
-                    // 📧 Optionnel: Envoyer notification à n8n
-                    fetch('https://primary-production-6c02.up.railway.app/webhook/upload-notification', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            ndf_id: ndfData.ndf_id,
-                            employee: ndfData.employee_name,
-                            files_uploaded: e.detail.allEntries ? e.detail.allEntries.length : 1,
-                            group_id: e.detail.groupInfo ? e.detail.groupInfo.uuid : null,
-                            file_id: e.detail.fileInfo ? e.detail.fileInfo.uuid : null,
-                            status: 'files_received'
-                        })
-                    }).catch(err => console.log('Notification envoyée'));
                 });
 
-                // En cas d'erreur d'upload
-                uploaderElement.addEventListener('file-upload-failed', (e) => {
-                    console.error('Échec upload:', e.detail);
-                    alert('❌ Erreur lors de l\'upload. Veuillez réessayer.');
-                });
+                // Test direct de l'état de l'uploader
+                setInterval(() => {
+                    if (uploaderElement.uploadCollection) {
+                        console.log('📊 État uploader:', uploaderElement.uploadCollection);
+                    }
+                }, 5000);
 
-                // 📊 Progression de l'upload
-                uploaderElement.addEventListener('file-upload-progress', (e) => {
-                    console.log('Progression:', e.detail);
-                    // Vous pouvez ajouter une barre de progression ici
-                });
-
-                // 🔄 Quand l'upload commence
-                uploaderElement.addEventListener('file-upload-start', (e) => {
-                    console.log('Upload démarré:', e.detail);
-                    // Désactiver le bouton ou afficher un loader
-                });
+            } else {
+                console.error('❌ Uploader non trouvé !');
             }
-        }, 2000);
+        }, 3000);
     </script>
 </body>
 </html>
