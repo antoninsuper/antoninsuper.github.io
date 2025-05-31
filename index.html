@@ -119,8 +119,7 @@
                         store="auto"
                         group-output="true"
                         max-local-file-size-bytes="10485760"
-                        accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx"
-                        metadata='{"project": "NDF", "type": "justificatif", "status": "pending"}'>
+                        accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx">
                     </uc-config>
 
                     <uc-file-uploader-regular ctx-name="my-uploader"></uc-file-uploader-regular>
@@ -175,11 +174,12 @@
             document.getElementById('description').textContent = ndfData.description;
             document.getElementById('success-ndf-id').textContent = ndfData.ndf_id;
 
-            // Configurer les metadata Uploadcare avec tags dynamiques
+            // Configurer les metadata Uploadcare via propriété DOM (pas attribut !)
             setTimeout(() => {
                 const uploaderConfig = document.querySelector('uc-config[ctx-name="my-uploader"]');
                 if (uploaderConfig) {
-                    const metadata = {
+                    // ✅ Assigner comme propriété DOM
+                    uploaderConfig.metadata = {
                         // Tags pour organisation
                         project: "NDF",
                         type: "justificatif",
@@ -190,16 +190,17 @@
                         employee: ndfData.employee_name,
                         employee_slug: ndfData.employee_name.toLowerCase().replace(/[^a-z0-9]/g, '_'),
                         validated_by: ndfData.validated_by,
-                        amount: ndfData.amount,
+                        amount: ndfData.amount.toString(),
                         description: ndfData.description,
                         timestamp: ndfData.timestamp,
                         
                         // Tags pour filtrage
                         year: new Date().getFullYear().toString(),
-                        month: new Date().getMonth() + 1,
+                        month: (new Date().getMonth() + 1).toString(),
                         upload_date: new Date().toISOString().split('T')[0]
                     };
-                    uploaderConfig.setAttribute('metadata', JSON.stringify(metadata));
+                    
+                    console.log('Metadata configurées:', uploaderConfig.metadata);
                 }
             }, 1000);
         }
