@@ -164,19 +164,30 @@
             document.getElementById('description').textContent = ndfData.description;
             document.getElementById('success-ndf-id').textContent = ndfData.ndf_id;
 
-            // Configurer les metadata Uploadcare
-            const uploader = document.querySelector('uc-config[ctx-name="ndf-uploader"]');
-            if (uploader) {
-                const metadata = {
-                    ndf_id: ndfData.ndf_id,
-                    employee: ndfData.employee_name,
-                    validated_by: ndfData.validated_by,
-                    amount: ndfData.amount,
-                    description: ndfData.description,
-                    timestamp: ndfData.timestamp
-                };
-                uploader.setAttribute('metadata', JSON.stringify(metadata));
-            }
+            // Configurer les metadata Uploadcare APRÈS que la page soit chargée
+            setTimeout(() => {
+                const uploaderConfig = document.querySelector('uc-config[ctx-name="ndf-uploader"]');
+                if (uploaderConfig) {
+                    const metadata = {
+                        ndf_id: ndfData.ndf_id,
+                        employee: ndfData.employee_name,
+                        validated_by: ndfData.validated_by,
+                        amount: ndfData.amount,
+                        description: ndfData.description,
+                        timestamp: ndfData.timestamp
+                    };
+                    uploaderConfig.setAttribute('metadata', JSON.stringify(metadata));
+                    
+                    // Forcer le rechargement du widget
+                    const uploaderElement = document.querySelector('uc-file-uploader-regular[ctx-name="ndf-uploader"]');
+                    if (uploaderElement) {
+                        uploaderElement.style.display = 'none';
+                        setTimeout(() => {
+                            uploaderElement.style.display = 'block';
+                        }, 100);
+                    }
+                }
+            }, 1000);
         }
 
         // Gestion des événements Uploadcare
